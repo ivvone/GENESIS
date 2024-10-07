@@ -93,7 +93,7 @@ long double sumfactorial_rev(int n, const int &k0) // log(n!/k0!)
 long double cdnorm(long double x, long double mean, long double sd, bool loglog) // R: dnorm()
 {
   long double res;
-  res = -0.5*log((2.0*PI))  - log(sd)- pow(x-mean, 2)/(2.0*pow(sd,2));
+  res = -0.5*log((2.0*M_PI))  - log(sd)- pow(x-mean, 2)/(2.0*pow(sd,2));
   if(loglog){return res;}
   else{return exp(res);}
 }
