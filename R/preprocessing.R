@@ -5,6 +5,7 @@
 #' SNP (SNP rsID), 
 #' Z (GWAS test z-statistic), 
 #' N (GWAS study sample size which can be different for different SNPs)
+#' @param ancestry the ancestry of the population studied (one of AFR, AMR, EAS, EUR, SAS). By default, it is EUR.
 #' @param LDcutoff a number from (0.05, 0.1, 0.2); indicating LD score is calculated based on the particular r^2 cutoff. By default, it is 0.1.
 #' @param LDwindow a number from (0.5, 1, 2); indicating LD score is calculated based on the particular window size (MB). By default, it is 1 MB.
 #' @param filter logical; if TRUE, the input summary data will be filtered.
@@ -12,7 +13,8 @@
 #' @export
 #' @examples preprocessing(summarydata, LDcutoff=0.1,LDwindow=1,filter=FALSE)
 
-preprocessing <- function(summarydata, LDcutoff=0.1,LDwindow=1,filter=FALSE){
+preprocessing <- function(summarydata, ancestry="EUR", 
+                          LDcutoff=0.1,LDwindow=1,filter=FALSE){
   #----------------------------------------------------#----------------------------------------------------
   # I. summary GWAS data format check
   #----------------------------------------------------#----------------------------------------------------
@@ -43,7 +45,8 @@ preprocessing <- function(summarydata, LDcutoff=0.1,LDwindow=1,filter=FALSE){
   #----------------------------------------------------#----------------------------------------------------
   # III. merge the summary GWAS data with the LD score data
   #----------------------------------------------------#----------------------------------------------------
-  data(list=paste0("LDwindow",LDwindow,"MB_cutoff",LDcutoff))
+  #data(list=paste0("LDwindow",LDwindow,"MB_cutoff",LDcutoff))
+  load(paste0(ancestry,"_LDwindow1MB_cutoff0.1"))
   
   summarydata$SNP <- as.character(summarydata$SNP)
   summarydata$Z <- as.numeric(as.character(summarydata$Z))
