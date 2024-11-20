@@ -5,4 +5,3 @@
 #' @name LDwindow1MB_cutoff0.1
 #' @usage data("LDwindow1MB_cutoff0.1")
 NULL
-
