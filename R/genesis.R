@@ -8,7 +8,7 @@
 #' @param filter logical; if TRUE, the input summary data will be filtered.
 #' @param modelcomponents 2 or 3, indicating fitting 2-component or 3-component model.
 #' @param cores number of CPU threads in parallel computing.
-#' @param ancestry the ancestry of the population studied (one of AFR, AMR, EAS, EUR, SAS). By default, it is EUR.
+#' @param LDfile filename of LDscore file, used instead of specifying LDcutoff and LDwindow 
 #' @param LDcutoff a number from (0.05, 0.1, 0.2); indicating LD score is calculated based on the particular r^2 cutoff. By default, it is 0.1.
 #' @param LDwindow a number from (0.5, 1, 2); indicating LD score is calculated based on the particular window size (MB). By default, it is 1 MB.
 #' @param M total number of SNPs in the reference panel; by default, it is the total number of common SNPs in Hapmap3 reference panel, i.e., 1070777.
@@ -39,7 +39,7 @@
 
 genesis <- function(summarydata, filter=FALSE,
                     modelcomponents=2, cores=10, 
-                    ancestry="EUR", LDcutoff=0.1, LDwindow=1, M=1070777,
+                    LDfile=NULL, LDcutoff=0.1, LDwindow=1, M=1070777,
                     c0=10, BIC.gamma=0.5, 
                     print=TRUE, printfreq=10, starting=NA, startingpic=NA, tolerance=NA, 
                     qqplot=TRUE, qqplotCI.coverage=0.8, qqplot.name="", qqplot.axis=10, qqplot.nsim=100, 
@@ -97,7 +97,7 @@ genesis <- function(summarydata, filter=FALSE,
   # II. preliminary summary GWAS data processing, then merge the summary GWAS data with the LD score data, 
   #     and then extract the variables needed for analysis.
   #----------------------------------------------------#----------------------------------------------------
-  df <- preprocessing(summarydata, ancestry, LDcutoff,LDwindow,filter)
+  df <- preprocessing(summarydata, LDfile, LDcutoff,LDwindow,filter)
   
   betahat <- as.numeric(as.character(df$betahat))
   varbetahat <- as.numeric(as.character(df$varbetahat))

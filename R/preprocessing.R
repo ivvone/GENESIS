@@ -5,7 +5,7 @@
 #' SNP (SNP rsID), 
 #' Z (GWAS test z-statistic), 
 #' N (GWAS study sample size which can be different for different SNPs)
-#' @param LDfile filename of LDscore file, used instead of specifying LDcutoff and LDwindow # the ancestry of the population studied (one of AFR, AMR, EAS, EUR, SAS). By default, it is EUR.
+#' @param LDfile filename of LDscore file, used instead of specifying LDcutoff and LDwindow 
 #' @param LDcutoff a number from (0.05, 0.1, 0.2); indicating LD score is calculated based on the particular r^2 cutoff. By default, it is 0.1.
 #' @param LDwindow a number from (0.5, 1, 2); indicating LD score is calculated based on the particular window size (MB). By default, it is 1 MB.
 #' @param filter logical; if TRUE, the input summary data will be filtered.
