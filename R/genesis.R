@@ -51,8 +51,8 @@ genesis <- function(summarydata, filter=FALSE,
   # I. Check input variables
   #----------------------------------------------------#----------------------------------------------------
   # summary GWAS data format check
-  if(ncol(summarydata)!=3){
-    stop("The summary GWAS data should have 3 columns with (SNP rsID, Z-statistic, Sample size)!")
+  if(ncol(summarydata)!=4){
+    stop("The summary GWAS data should have 4 columns with (SNP rsID, SNP position, Z-statistic, Sample size)!")
   }
   
   if(any(!is.na(starting))){
