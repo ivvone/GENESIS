@@ -205,7 +205,6 @@ genesis <- function(summarydata, filter=FALSE,
       # Assuming 'm_S' is a matrix, select rows based on 'inx' and compute column sums
       colSums(matrix(m_S[inx,], ncol = length(est)))
     })
-    colSums(matrix(m_S[inx,],ncol=length(est)))})
     
     m_Sbar = matrix(unlist(tem),ncol=ncol(m_S),byrow=T) + m_S
 
