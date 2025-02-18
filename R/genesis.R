@@ -189,9 +189,24 @@ genesis <- function(summarydata, filter=FALSE,
     #----------------------------------------------------
     # get sum of scores in each neighbor of SNP, K*3 matrix
     m_Sbar <- matrix(0,K,length(est));
-    inx_name <- apply(matrix(SNP,ncol=1), 1, function(t) as.numeric(strsplit(t, "rs")[[1]][2]))
+    #inx_name <- apply(matrix(SNP,ncol=1), 1, function(t) as.numeric(strsplit(t, "rs")[[1]][2]))
+    #inx_name <- as.numeric(lapply(strsplit(SNP, ":"), `[[`, 2))
+    inx_name <- apply(matrix(SNP, ncol = 1), 1, function(t) as.numeric(strsplit(strsplit(t, ":")[[1]][2], ":")[[1]][1]))
+    
     dictionary <- modification_loc(inx_name,K,max(inx_name)) 
-    tem <- lapply(TaggingSNPs, function(t) {inx <- zero.omit(dictionary[as.vector(na.omit(as.numeric(unlist(strsplit(strsplit(t, ",")[[1]], "rs")))))]); colSums(matrix(m_S[inx,],ncol=length(est)))})
+    #tem <- lapply(TaggingSNPs, function(t) {inx <- zero.omit(dictionary[as.vector(na.omit(as.numeric(unlist(strsplit(strsplit(t, ",")[[1]], "rs")))))]); colSums(matrix(m_S[inx,],ncol=length(est)))})
+    tem <- lapply(TaggingSNPs, function(t) {
+      # Split the string by ":" and extract the second element
+      inx <- as.numeric(sapply(strsplit(t, ":"), function(x) x[2]))
+      
+      # Assuming 'dictionary' and 'm_S' are already defined, extract the relevant rows
+      inx <- zero.omit(dictionary[inx])  # Apply zero.omit function here (if it’s defined)
+      
+      # Assuming 'm_S' is a matrix, select rows based on 'inx' and compute column sums
+      colSums(matrix(m_S[inx,], ncol = length(est)))
+    })
+    colSums(matrix(m_S[inx,],ncol=length(est)))})
+    
     m_Sbar = matrix(unlist(tem),ncol=ncol(m_S),byrow=T) + m_S
 
     #----------------------------------------------------
