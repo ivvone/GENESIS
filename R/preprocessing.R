@@ -19,7 +19,7 @@ preprocessing <- function(summarydata, LDfile=NULL,
   # I. summary GWAS data format check
   #----------------------------------------------------#----------------------------------------------------
   origFormat = (ncol(summarydata)==3)
-  if(ncol(summarydata)!=4 | !origFormat){
+  if(ncol(summarydata)!=4 & !origFormat){
     stop("The summary GWAS data should have 4 columns with (SNP rsID, SNP position, Z-statistic, Sample size),
          or 3 columns with (SNP rsID, Z-statistic, Sample size)!")
   }

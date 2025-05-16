@@ -56,7 +56,7 @@ genesis <- function(summarydata, filter=FALSE,
   # if origFormat TRUE, the LDfile should use rsIDs
   # if origFormat FALSE, the LDfile uses 
   origFormat = (ncol(summarydata)==3)
-  if(ncol(summarydata)!=4 | !origFormat){
+  if(ncol(summarydata)!=4 & !origFormat){
     stop("The summary GWAS data should have 4 columns with (SNP rsID, SNP position, Z-statistic, Sample size),
          or 3 columns with (SNP rsID, Z-statistic, Sample size)!")
     }
