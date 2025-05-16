@@ -52,7 +52,7 @@ preprocessing <- function(summarydata, LDfile=NULL,
   # III. merge the summary GWAS data with the LD score data
   #----------------------------------------------------#----------------------------------------------------
   if(is.null(LDfile)){
-    data(list=paste0("LDwindow",LDwindow,"MB_cutoff",LDcutoff))
+    data(list=paste0("EUR_LDwindow",LDwindow,"MB_cutoff",LDcutoff))
   } else{
     load(LDfile)
   }
