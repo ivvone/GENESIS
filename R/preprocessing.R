@@ -18,14 +18,20 @@ preprocessing <- function(summarydata, LDfile=NULL,
   #----------------------------------------------------#----------------------------------------------------
   # I. summary GWAS data format check
   #----------------------------------------------------#----------------------------------------------------
-  if(ncol(summarydata)!=4){
-    stop("The summary GWAS data should have 4 columns with (SNP rsID, SNP position, Z-statistic, sample size)!")
+  origFormat = (ncol(summarydata)==3)
+  if(ncol(summarydata)!=4 | !origFormat){
+    stop("The summary GWAS data should have 4 columns with (SNP rsID, SNP position, Z-statistic, Sample size),
+         or 3 columns with (SNP rsID, Z-statistic, Sample size)!")
   }
   
   #----------------------------------------------------#----------------------------------------------------
   # II. preliminary summary GWAS data filtering
   #----------------------------------------------------#----------------------------------------------------
-  colnames(summarydata) <- c("rsSNP", "posSNP", "Z","N")
+  if(origFormat){
+    colnames(summarydata) <- c("SNP", "Z","N")
+  } else{
+    colnames(summarydata) <- c("SNP", "posSNP", "Z","N")
+  }
   
   if(filter==TRUE){
     #a. If sample size varies from SNP to SNP, remove SNPs with an effective sample size less than 0.67 times the 90th percentile of sample size.
@@ -34,7 +40,7 @@ preprocessing <- function(summarydata, LDfile=NULL,
     
     #b. Remove SNPs within the major histocompatibility complex (MHR) region; filter SNPs to Hapmap3 SNPs.
     data(w_hm3.noMHC.snplist)
-    ikeep2 <- which(as.character(summarydata$rsSNP) %in% w_hm3.noMHC.snplist$SNP)
+    ikeep2 <- which(as.character(summarydata$SNP) %in% w_hm3.noMHC.snplist$SNP)
     summarydata <- summarydata[ikeep2,]
     
     #c. Remove SNPs with extremely large effect sizes (chi^2 > 80).
@@ -53,7 +59,12 @@ preprocessing <- function(summarydata, LDfile=NULL,
   #data(list=paste0("LDwindow",LDwindow,"MB_cutoff",LDcutoff))
   #load(paste0(ancestry,"_LDwindow1MB_cutoff0.1"))
   
-  summarydata$SNP <- as.character(summarydata$posSNP)
+  if(origFormat){
+    summarydata$SNP <- as.character(summarydata$SNP)
+  } else{
+    summarydata$SNP <- as.character(summarydata$posSNP)
+  }
+  
   summarydata$Z <- as.numeric(as.character(summarydata$Z))
   summarydata$N <- as.numeric(as.character(summarydata$N))
   

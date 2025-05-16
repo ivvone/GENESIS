@@ -51,9 +51,15 @@ genesis <- function(summarydata, filter=FALSE,
   # I. Check input variables
   #----------------------------------------------------#----------------------------------------------------
   # summary GWAS data format check
-  if(ncol(summarydata)!=4){
-    stop("The summary GWAS data should have 4 columns with (SNP rsID, SNP position, Z-statistic, Sample size)!")
-  }
+  
+  # origFormat indicates three cols: SNP rsID, z score, n
+  # if origFormat TRUE, the LDfile should use rsIDs
+  # if origFormat FALSE, the LDfile uses 
+  origFormat = (ncol(summarydata)==3)
+  if(ncol(summarydata)!=4 | !origFormat){
+    stop("The summary GWAS data should have 4 columns with (SNP rsID, SNP position, Z-statistic, Sample size),
+         or 3 columns with (SNP rsID, Z-statistic, Sample size)!")
+    }
   
   if(any(!is.na(starting))){
     l = length(starting)
@@ -189,25 +195,27 @@ genesis <- function(summarydata, filter=FALSE,
     #----------------------------------------------------
     # get sum of scores in each neighbor of SNP, K*3 matrix
     m_Sbar <- matrix(0,K,length(est));
-    #inx_name <- apply(matrix(SNP,ncol=1), 1, function(t) as.numeric(strsplit(t, "rs")[[1]][2]))
-    #inx_name <- as.numeric(lapply(strsplit(SNP, ":"), `[[`, 2))
-    inx_name <- apply(matrix(SNP, ncol = 1), 1, function(t) as.numeric(strsplit(strsplit(t, ":")[[1]][2], ":")[[1]][1]))
-    
-    dictionary <- modification_loc(inx_name,K,max(inx_name)) 
-    #tem <- lapply(TaggingSNPs, function(t) {inx <- zero.omit(dictionary[as.vector(na.omit(as.numeric(unlist(strsplit(strsplit(t, ",")[[1]], "rs")))))]); colSums(matrix(m_S[inx,],ncol=length(est)))})
-    tem <- lapply(TaggingSNPs, function(t) {
-      # Split the string by ":" and extract the second element
-      inx <- as.numeric(sapply(strsplit(t, ":"), function(x) x[2]))
-      
-      # Assuming 'dictionary' and 'm_S' are already defined, extract the relevant rows
-      inx <- zero.omit(dictionary[inx])  # Apply zero.omit function here (if it’s defined)
-      
-      # Assuming 'm_S' is a matrix, select rows based on 'inx' and compute column sums
-      colSums(matrix(m_S[inx,], ncol = length(est)))
-    })
+    if(origFormat){
+      inx_name <- apply(matrix(SNP,ncol=1), 1, function(t) as.numeric(strsplit(t, "rs")[[1]][2]))
+      dictionary <- modification_loc(inx_name,K,max(inx_name)) 
+      tem <- lapply(TaggingSNPs, function(t) {inx <- zero.omit(dictionary[as.vector(na.omit(as.numeric(unlist(strsplit(strsplit(t, ",")[[1]], "rs")))))]); colSums(matrix(m_S[inx,],ncol=length(est)))})
+    } else{
+      inx_name <- apply(matrix(SNP, ncol = 1), 1, function(t) as.numeric(strsplit(strsplit(t, ":")[[1]][2], ":")[[1]][1]))
+      dictionary <- modification_loc(inx_name,K,max(inx_name)) 
+      tem <- lapply(TaggingSNPs, function(t) {
+        # Split the string by ":" and extract the second element (position)
+        inx <- as.numeric(sapply(strsplit(t, ":"), function(x) x[2]))
+        
+        # extract the relevant rows
+        inx <- zero.omit(dictionary[inx])  # Apply zero.omit function here (if it’s defined)
+        
+        # select rows based on 'inx' and compute column sums
+        colSums(matrix(m_S[inx,], ncol = length(est)))
+      })
+    }
     
     m_Sbar = matrix(unlist(tem),ncol=ncol(m_S),byrow=T) + m_S
-
+    
     #----------------------------------------------------
     inv_I <- solve(m_I,tol=1e-20);    
     J <- (t(m_S)%*%m_Sbar);
@@ -221,7 +229,7 @@ genesis <- function(summarydata, filter=FALSE,
     ds = sum(diag(inv_I %*% J))
     aic = -2*llk + 2*ds
     bic = -2*llk + ds*log(mean(n)) + 2*BIC.gamma*log(5^ds)
-   
+    
     temtem <- matrix(c(M*est[2], M*est[1], 0), ncol=1)
     sd_heritability <- sqrt( t(temtem) %*% var_est %*% temtem)  # standard error of heritability
     sd_causalnum <- M*sd_est[1]
@@ -231,7 +239,7 @@ genesis <- function(summarydata, filter=FALSE,
     
     if(herit.liability==F | (herit.liability==T & (is.na(population.prevalence) | is.na(sample.prevalence)))){
       if(herit.liability==T) print("No population prevalence or sample prevalence input, the heritability will be output in log-odds-ratio scale!")
-
+      
       estimates <- list("Number of sSNPs (sd)"=paste0(format(causalnum,digits=3)," (",format(sd_causalnum,digits=4), ")"),
                         "Total heritability in log-odds-ratio scale (sd)"=paste0(format(heritability,digits=3)," (",format(sd_heritability,digits=4), ")"),
                         "Sibling risk (sd)"=paste0(format(risk,digits=3)," (",format(sd_risk,digits=4), ")"),
@@ -322,11 +330,28 @@ genesis <- function(summarydata, filter=FALSE,
     #----------------------------------------------------
     # get sum of scores in each neighbor of SNP, K*3 matrix
     m_Sbar <- matrix(0,K,length(est));
-    inx_name <- apply(matrix(SNP,ncol=1), 1, function(t) as.numeric(strsplit(t, "rs")[[1]][2]))
-    dictionary <- modification_loc(inx_name,K,max(inx_name)) 
-    tem <- lapply(TaggingSNPs, function(t) {inx <- zero.omit(dictionary[as.vector(na.omit(as.numeric(unlist(strsplit(strsplit(t, ",")[[1]], "rs")))))]); colSums(matrix(m_S[inx,],ncol=length(est)))})
+    
+    if(origFormat){
+      inx_name <- apply(matrix(SNP,ncol=1), 1, function(t) as.numeric(strsplit(t, "rs")[[1]][2]))
+      dictionary <- modification_loc(inx_name,K,max(inx_name)) 
+      tem <- lapply(TaggingSNPs, function(t) {inx <- zero.omit(dictionary[as.vector(na.omit(as.numeric(unlist(strsplit(strsplit(t, ",")[[1]], "rs")))))]); colSums(matrix(m_S[inx,],ncol=length(est)))})
+    } else{
+      inx_name <- apply(matrix(SNP, ncol = 1), 1, function(t) as.numeric(strsplit(strsplit(t, ":")[[1]][2], ":")[[1]][1]))
+      dictionary <- modification_loc(inx_name,K,max(inx_name)) 
+      tem <- lapply(TaggingSNPs, function(t) {
+        # Split the string by ":" and extract the second element (position)
+        inx <- as.numeric(sapply(strsplit(t, ":"), function(x) x[2]))
+        
+        # extract the relevant rows
+        inx <- zero.omit(dictionary[inx])  # Apply zero.omit function here (if it’s defined)
+        
+        # select rows based on 'inx' and compute column sums
+        colSums(matrix(m_S[inx,], ncol = length(est)))
+      })
+    }
+    
     m_Sbar = matrix(unlist(tem),ncol=ncol(m_S),byrow=T) + m_S
-
+    
     #----------------------------------------------------
     inv_I <- solve(m_I,tol=1e-20);    
     J <- (t(m_S)%*%m_Sbar);
@@ -356,7 +381,7 @@ genesis <- function(summarydata, filter=FALSE,
     
     tem_heritsmall = matrix(c(M*(1-est[2])*est[4],-M*est[1]*est[4], 0, M*est[1]*(1-est[2]), 0),ncol=1)
     sd_heritsmall = sqrt( t(tem_heritsmall) %*% var_est %*% tem_heritsmall)
-
+    
     
     risk <- sqrt(exp(heritability))
     sd_risk <- sqrt(risk*sd_heritability^2/2)
@@ -393,26 +418,26 @@ genesis <- function(summarydata, filter=FALSE,
       tem <- h2transfer(heritability,sd_heritability, population.prevalence,sample.prevalence)
       
       estimates <- list("Number of sSNPs (sd)"=paste0(format(causalnum,digits=3)," (",format(sd_causalnum,digits=4), ")"),
-                          "Number of sSNPs in the cluster with larger variance component (sd)"=paste0(format(largenum,digits=3)," (",format(sd_largenum,digits=4), ")"),
-                          "Total heritability in log-odds-ratio scale (sd)"=paste0(format(heritability,digits=3)," (",format(sd_heritability,digits=4), ")"),
-                          "Total heritability in observed scale (sd)"=paste0(format(tem$Hobserved,digits=3)," (",format(tem$se_Hobserved,digits=4), ")"),
-                          "Total heritability in liability scale (sd)"=paste0(format(tem$Hliability,digits=3)," (",format(tem$se_Hliability,digits=4), ")"),
-                          "Sibling risk (sd)"=paste0(format(risk,digits=3)," (",format(sd_risk,digits=4), ")"),
-                          "Heritability explained by the cluster with larger variance component (sd)"=paste0(format(heritlarge,digits=3)," (",format(sd_heritlarge,digits=4), ")"),
-                          "Heritability explained by the cluster with samller variance component"=paste0(format(heritsmall,digits=3)," (",format(sd_heritsmall,digits=4), ")"),
-                          "Parameter (pic, p1, sigmasq1, sigmasq2, a) estimates" = est, 
-                          "S.D. of parameter estimates"=sd_est,
-                          "Covariance matrix of parameter estimates" = var_est,
-                          "Composite log-likelihood of fitted model" = fit[2],
-                          "Model selection related" = list(
-                            "BIC" = bic,
-                            "ds" = ds, 
-                            "Information matrix" = m_I, 
-                            "J"=J
-                          ),
-                          "c0" = c0, 
-                          "Total number of SNPs in the GWAS study after quality control"=N_SNPs_summary,
-                          "Total time in fitting the 3-component model (in hours)" = runhour)
+                        "Number of sSNPs in the cluster with larger variance component (sd)"=paste0(format(largenum,digits=3)," (",format(sd_largenum,digits=4), ")"),
+                        "Total heritability in log-odds-ratio scale (sd)"=paste0(format(heritability,digits=3)," (",format(sd_heritability,digits=4), ")"),
+                        "Total heritability in observed scale (sd)"=paste0(format(tem$Hobserved,digits=3)," (",format(tem$se_Hobserved,digits=4), ")"),
+                        "Total heritability in liability scale (sd)"=paste0(format(tem$Hliability,digits=3)," (",format(tem$se_Hliability,digits=4), ")"),
+                        "Sibling risk (sd)"=paste0(format(risk,digits=3)," (",format(sd_risk,digits=4), ")"),
+                        "Heritability explained by the cluster with larger variance component (sd)"=paste0(format(heritlarge,digits=3)," (",format(sd_heritlarge,digits=4), ")"),
+                        "Heritability explained by the cluster with samller variance component"=paste0(format(heritsmall,digits=3)," (",format(sd_heritsmall,digits=4), ")"),
+                        "Parameter (pic, p1, sigmasq1, sigmasq2, a) estimates" = est, 
+                        "S.D. of parameter estimates"=sd_est,
+                        "Covariance matrix of parameter estimates" = var_est,
+                        "Composite log-likelihood of fitted model" = fit[2],
+                        "Model selection related" = list(
+                          "BIC" = bic,
+                          "ds" = ds, 
+                          "Information matrix" = m_I, 
+                          "J"=J
+                        ),
+                        "c0" = c0, 
+                        "Total number of SNPs in the GWAS study after quality control"=N_SNPs_summary,
+                        "Total time in fitting the 3-component model (in hours)" = runhour)
     }
     
     if(qqplot==T){
